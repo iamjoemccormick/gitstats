@@ -6,9 +6,21 @@ import (
 	"net/http"
 )
 
-func githubApiGetRequest(endpoint, repo string) string {
+type Clones struct {
+	Count   int
+	Uniques int
+	Clones  []DailyClones
+}
 
-	req, _ := http.NewRequest("GET", githubApiBaseUrl+repo+endpoint, nil)
+type DailyClones struct {
+	Timestamp string
+	Count     int
+	Uniques   int
+}
+
+func githubApiGetRequest(url, repo string) string {
+
+	req, _ := http.NewRequest("GET", githubApiBaseUrl+repo+url, nil)
 
 	for _, header := range githubHeaders {
 		req.Header.Add(header.header, header.value)
