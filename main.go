@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"log"
 	"os"
 	"time"
-
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 type requestHeader struct {
@@ -43,22 +40,27 @@ func main() {
 
 	githubRepos = loadFileToSlice(*gitHubReposFile)
 
-	client := influxdb2.NewClient(*dbUrl, *dbToken)
-	writeAPI := client.WriteAPIBlocking(*dbOrg, *dbBucket)
-
 	for _, repo := range githubRepos {
 
 		response := githubApiGetRequest(githubApis["Clones"], repo)
 		var clones Clones
 		json.Unmarshal([]byte(response), &clones)
 
-		p := influxdb2.NewPointWithMeasurement("LifetimeClones").
-			AddTag("Repo", repo).
-			AddField("Count", clones.Count).
-			AddField("Uniques", clones.Uniques).
-			SetTime(time.Now())
+		tags := map[string]string{"Repo": repo}
+		fields := map[string]int{"Count": clones.Count, "Uniques": clones.Uniques}
 
-		writeAPI.WritePoint(context.Background(), p)
+		writeInfluxPoint("LifetimeClones", tags, fields, time.Now())
+
+		for _, c := range clones.Clones {
+			t, err := time.Parse("2006-01-02T15:04:05.999999999Z07:00", c.Timestamp)
+
+			if err == nil {
+				writeInfluxPoint("DailyClones", map[string]string{"Repo": repo}, map[string]int{"Count": c.Count, "Unique": c.Uniques}, t)
+			} else {
+				log.Printf("Error parsing timestamp '%s' for InfluxPoint 'DailyClones'.", err)
+			}
+
+		}
 
 		//TODO: Make this functionality reusable and expand it to the other endpoints.
 
