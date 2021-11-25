@@ -6,19 +6,7 @@ import (
 	"net/http"
 )
 
-type Clones struct {
-	Count   int
-	Uniques int
-	Clones  []DailyClones
-}
-
-type DailyClones struct {
-	Timestamp string
-	Count     int
-	Uniques   int
-}
-
-func githubApiGetRequest(url, repo string) string {
+func githubApiGetRequest(url, repo string) []byte {
 
 	req, _ := http.NewRequest("GET", githubApiBaseUrl+repo+url, nil)
 
@@ -32,10 +20,11 @@ func githubApiGetRequest(url, repo string) string {
 
 	if err != nil {
 		log.Println(res)
-		return ""
+		return nil
 	}
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
-	return string(body)
+
+	return body
 }

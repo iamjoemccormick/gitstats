@@ -25,7 +25,7 @@ func loadFileToSlice(path string) (output []string) {
 	return output
 }
 
-func writeInfluxPoint(measurement string, tags map[string]string, fields map[string]int, time time.Time) error {
+func writeInfluxPoint(measurement string, tags map[string]string, fields map[string]float64, time time.Time) error {
 
 	client := influxdb2.NewClient(*dbUrl, *dbToken)
 	writeAPI := client.WriteAPIBlocking(*dbOrg, *dbBucket)
